@@ -1,8 +1,8 @@
 //
 //  ContentView.swift
-//  Swift_Movie_Library
+//  MovieLibrary
 //
-//  Created by Nguyễn Tín on 03/02/2025.
+//  Created by Nguyễn Tín on 02/02/2025.
 //
 
 import SwiftUI
@@ -11,62 +11,85 @@ import CoreData
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
 
+    // Update the fetch request to use CDMovie and sort by title (or any attribute you prefer)
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \CDMovie.title, ascending: true)],
         animation: .default)
-    private var items: FetchedResults<Item>
+    private var movies: FetchedResults<CDMovie>
 
     var body: some View {
         NavigationView {
             List {
-                ForEach(items) { item in
+                ForEach(movies) { movie in
                     NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
+                        // Destination: For demonstration, we show the movie title and release year.
+                        VStack(alignment: .leading) {
+                            Text(movie.title ?? "Unknown Title")
+                                .font(.title)
+                            Text("Released: \(movie.releaseYear)")
+                                .font(.subheadline)
+                        }
+                        .padding()
                     } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(movie.title ?? "Unknown Title")
+                                    .font(.headline)
+                                Text("Released: \(movie.releaseYear)")
+                                    .font(.subheadline)
+                            }
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
                     }
                 }
-                .onDelete(perform: deleteItems)
+                .onDelete(perform: deleteMovies)
             }
+            .listStyle(PlainListStyle())
+            .navigationTitle("My Movie Library")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
                 ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                    Button(action: addMovie) {
+                        Label("Add Movie", systemImage: "plus")
                     }
                 }
             }
-            Text("Select an item")
+            Text("Select a movie")
+                .foregroundColor(.secondary)
         }
     }
 
-    private func addItem() {
+    // Add a new movie to Core Data with some default values.
+    private func addMovie() {
         withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
+            let newMovie = CDMovie(context: viewContext)
+            newMovie.id = UUID()
+            newMovie.title = "New Movie"
+            newMovie.releaseYear = 2025
+            newMovie.rating = 0.0
+            newMovie.movieDescription = "Description goes here."
+            newMovie.poster = nil
 
             do {
                 try viewContext.save()
             } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
                 let nsError = error as NSError
                 fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
             }
         }
     }
 
-    private func deleteItems(offsets: IndexSet) {
+    // Delete selected movies from Core Data.
+    private func deleteMovies(offsets: IndexSet) {
         withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
+            offsets.map { movies[$0] }.forEach(viewContext.delete)
 
             do {
                 try viewContext.save()
             } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
                 let nsError = error as NSError
                 fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
             }
@@ -74,7 +97,7 @@ struct ContentView: View {
     }
 }
 
-private let itemFormatter: DateFormatter = {
+private let previewDateFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.dateStyle = .short
     formatter.timeStyle = .medium
@@ -82,5 +105,6 @@ private let itemFormatter: DateFormatter = {
 }()
 
 #Preview {
-    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    ContentView()
+        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }
