@@ -1,20 +1,27 @@
-// Models/Movie.swift
 import Foundation
+import CoreData
 
-struct Movie: Identifiable, Codable {
-    let id: UUID
-    var title: String
-    var releaseYear: Int
-    var rating: Double
-    var description: String
-    var poster: String?  // Base64 string or URL string for the poster
+extension CDMovie {
     
-    init(id: UUID = UUID(), title: String, releaseYear: Int, rating: Double, description: String, poster: String? = nil) {
-        self.id = id
-        self.title = title
-        self.releaseYear = releaseYear
-        self.rating = rating
-        self.description = description
-        self.poster = poster
+    // Convert a Core Data entity to a Swift model
+    func toMovie() -> Movie {
+        Movie(
+            id: self.id ?? UUID(),
+            title: self.title ?? "",
+            releaseYear: Int(self.releaseYear),
+            rating: self.rating,
+            description: self.movieDescription ?? "",
+            poster: self.poster
+        )
+    }
+    
+    // Update the Core Data entity from a Swift model
+    func update(from movie: Movie) {
+        self.id = movie.id
+        self.title = movie.title
+        self.releaseYear = Int32(movie.releaseYear)
+        self.rating = movie.rating
+        self.movieDescription = movie.description
+        self.poster = movie.poster
     }
 }

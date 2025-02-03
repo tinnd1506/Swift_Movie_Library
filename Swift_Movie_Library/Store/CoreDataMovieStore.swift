@@ -9,7 +9,7 @@ class CoreDataMovieStore: ObservableObject {
     
     init() {
         // Name must match the .xcdatamodeld file (without extension)
-        container = NSPersistentContainer(name: "MovieLibrary")
+        container = NSPersistentContainer(name: "Swift_Movie_Library")
         
         // Configure the persistent store description
         let description = NSPersistentStoreDescription()
